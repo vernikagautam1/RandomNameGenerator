@@ -6,6 +6,30 @@ const _ = require('underscore');
 
 app.use(express.json());
 
+app.post('/insertrandomname', async(req, res) => {
+    let names = req.body.array;
+    let insertedNames = [];
+
+    // let insertedNames = [];
+    for (let i = 0; i < names.length; i++) {
+
+        let checkSql = `SELECT name FROM randomname WHERE name = ?`;
+        let checkValues = [names[i]];
+        await connection.query(checkSql, checkValues).then(async([result]) => {
+
+            if (_.size(result) > 0) {
+                console.log(`'${names[i]}' already exists in database.`);
+            } else {
+                let insertSql = `INSERT INTO randomname (name,is_present) VALUES (?,?)`;
+                let insertValues = [names[i], 0];
+                await connection.query(insertSql, insertValues);
+                insertedNames.push(names[i]);
+                console.log(`Inserted '${names[i]}' into database.`);
+            }
+        });
+    }
+    res.status(200).json({ message: 'Names inserted into database', insertedNames });
+});
 
 app.get('/random-name', async(req, res) => {
     try {
